@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./editor.css">
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-39365077-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+</head>
+<body>
+  <section id="mod" style="display: flex;">
+    <div id="signature-pad" class="signature-pad">
+        <div class="signature-pad--body">
+          <canvas></canvas>
+        </div>
+        <div class="signature-pad--footer">
+          <div class="description">Sign above</div>
+    
+          <div class="signature-pad--actions">
+            <div class="column">
+              <button type="button" class="button clear" data-action="clear">Clear</button>
+              <button type="button" class="button" data-action="change-background-color">Change background color</button>
+              <button type="button" class="button" data-action="change-color">Change color</button>
+              <button type="button" class="button" data-action="change-width">Change width</button>
+              <button type="button" class="button" data-action="undo">Undo</button>
+            </div>
+            <div class="column">
+              <button type="button" class="button save" data-action="save-png">Save as PNG</button>
+            </div>   
+          </div>
+        </div>
+      </div>
+             <embed  src="./celke.pdf"  style="margin-left: 800px; position: absolute" width="700" height="600" type="application/pdf">  
+               <div id="drop" style=" margin-left: 800px; position: absolute; height: 600px; width: 700px;  ">    <div class="draggable bloco"></div></div>
+          
+      </div>
+    </section>
+
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"
+      integrity="sha384-NaWTHo/8YCBYJ59830LTz/P4aQZK1sS0SneOgAvhsIl3zBu8r9RevNg5lHCHAuQ/"
+      crossorigin="anonymous"></script>
+
+  
+
+      <script src="./signature_pad.umd.js"></script>
+      <script src="./app.js"></script>
+      <script>
+        var posX
+        var posY
+
+    window.addEventListener('click',(event)=>{
+
+      posX=event.clientX;
+      posY=event.clientY;
+    });
+
+
+      const wrapper = document.getElementById("signature-pad");
+      const clearButton = wrapper.querySelector("[data-action=clear]");
+      const undoButton = wrapper.querySelector("[data-action=undo]");
+      const savePNGButton = wrapper.querySelector("[data-action=save-png]");  
+      const canvas = wrapper.querySelector("canvas");
+      const signaturePad = new SignaturePad(canvas, { 
+ 
+      });
+    
+      function resizeCanvas() {
+   
+        const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+      
+        // This part causes the canvas to be cleared
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+      
+     
+        signaturePad.fromData(signaturePad.toData());
+      }
+      
+     
+      window.onresize = resizeCanvas;
+      resizeCanvas();
+      
+      function download(dataURL, filename) {
+        const blob = dataURLToBlob(dataURL);
+        const url = window.URL.createObjectURL(blob);
+      
+        const a = document.createElement("a");
+        a.style = "display: none";
+        a.href = url;
+        a.download = filename;
+      
+        document.body.appendChild(a);
+        a.click();
+      
+        window.URL.revokeObjectURL(url);
+      }
+      
+      // One could simply use Canvas#toBlob method instead, but it's just to show
+      // that it can be done using result of SignaturePad#toDataURL.
+      function dataURLToBlob(dataURL) {
+        // Code taken from https://github.com/ebidel/filer.js
+        const parts = dataURL.split(';base64,');
+        const contentType = parts[0].split(":")[1];
+        const raw = window.atob(parts[1]);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+      
+        for (let i = 0; i < rawLength; ++i) {
+          uInt8Array[i] = raw.charCodeAt(i);
+        }
+      
+        return new Blob([uInt8Array], { type: contentType });
+      }
+      
+      clearButton.addEventListener("click", () => {
+        signaturePad.clear();
+      });
+      
+      undoButton.addEventListener("click", () => {
+        const data = signaturePad.toData();
+      
+        if (data) {
+          data.pop(); // remove the last dot or line
+          signaturePad.fromData(data);
+        }
+      });
+      
+     
+      
+     
+      
+      savePNGButton.addEventListener("click", () => {
+        if (signaturePad.isEmpty()) {
+          alert("Please provide a signature first.");
+        } else {
+          const dataURL = signaturePad.toDataURL();
+          converterImagem(dataURL,posX,posY);
+          //download(dataURL, "signature.png");
+          
+        }
+      });
+      function converterImagem(dataURL ,posX,posY) {
+                  
+             //**** INICIO GERAR PDF *****/
+              // Instanciar o jsPDF
+              var doc = new jsPDF();
+      
+              // Texto que deve estar no PDF
+              doc.text('Cadawwdawd wa dawdawd adawdoi naiowd ioad ia n ion doawnid!', 15, 15);
+              doc.text('Cadawwdawd wa123na32323 io2j2 n l2n 2n jnn l2n nl kl anwdklanid!', 15, 30);
+              doc.text('____________________________________', 15, 80);
+           
+              console.log(dataURL);
+              doc.addImage(dataURL,59,54, 50, 50);
+      
+              // Gerar PDF
+              doc.save('celke.pdf');
+      
+              //**** FIM GERAR PDF *****/
+      }
+    </script>
+      
+      <script>
+        var Draggable = function (elemento) {
+          var that = this;
+          this.elemento = elemento;
+          this.posX = 0;
+          this.posY = 0;
+          this.top = 0;
+          this.left = 0;
+        
+          
+          this.refMouseUp = function (event) {
+            that.onMouseUp(event);
+          }
+        
+          this.refMouseMove = function (event) {
+            that.onMouseMove(event);
+          }
+        
+          this.elemento.addEventListener("mousedown", function (event) {
+            that.onMouseDown(event);
+          });
+        }
+        
+        Draggable.prototype.onMouseDown = function (event) {
+          this.posX = event.x;
+          this.posY = event.y;
+        
+          this.elemento.classList.add("dragging");
+          window.addEventListener("mousemove", this.refMouseMove);  
+          window.addEventListener("mouseup", this.refMouseUp);  
+        }
+        
+        Draggable.prototype.onMouseMove = function (event) {
+          var diffX = event.x - this.posX;
+          var diffY = event.y - this.posY;
+          this.elemento.style.top = (this.top + diffY) + "px";
+          this.elemento.style.left = (this.left + diffX) + "px";
+        }
+        
+        Draggable.prototype.onMouseUp = function (event) {
+          this.top = parseInt(this.elemento.style.top.replace(/\D/g, '')) || 0;
+          this.left = parseInt(this.elemento.style.left.replace(/\D/g, '')) || 0;
+          this.elemento.classList.remove("dragging");
+          window.removeEventListener("mousemove", this.refMouseMove); 
+          window.removeEventListener("mouseup", this.refMouseUp);  
+        }
+        
+        var draggables = document.querySelectorAll(".draggable");
+        [].forEach.call(draggables, function (draggable, indice) {
+          new Draggable(draggable);
+        });
+           
+                
+        /*
+               const Assinatura=document.querySelectorAll("#PosAssinatura"); 
+        
+               Assinatura.forEach( assinaturaEl =>{
+        
+                    assinaturaEl.addEventListener('dragstart',e => {
+        
+                        e.dataTransfer.setData('Text',e.target.id);
+                        console.log(e.target.id);
+                        });
+                });
+        
+                dropZone.addEventListener('dragover',e =>{
+                        e.preventDefault();
+                });
+        
+                dropZone.addEventListener('drop', e =>{
+                    console.log('drop');
+                });*/
+            </script>
+</body>
+</html>
